@@ -25,7 +25,7 @@
       margin-bottom: 10px;
     }
     .nav-btns { display: flex; justify-content: space-between; }
-    .profile-info { font-size: 18px; margin: 10px 0; }
+    .profile-info { font-size: 18px; margin: 10px 0; text-align: center; }
     .image-container {
       display: flex;
       justify-content: space-between;
@@ -57,9 +57,7 @@
       overflow-y: scroll;
     }
     table { width: 100%; border-collapse: collapse; }
-    th, td {
-      padding: 6px;
-    }
+    th, td { padding: 6px; }
     p.note { font-size: 13px; color: #888; }
     input[type="text"] {
       width: 100%;
@@ -76,17 +74,25 @@
 
   <div class="profile-info" id="profileInfo">username > location (container)</div>
 
+  <div style="display: flex; justify-content: space-around; margin: 10px 0;">
+    <button onclick="openInstagram()">📸 Instagram</button>
+    <button onclick="openThreads()">🧵 Threads</button>
+  </div>
+
   <textarea id="textBox" rows="4" placeholder="Your text will appear here..."></textarea>
+  <button onclick="pickText()">🎲 Pick Text</button>
+  <button onclick="copyText()">📋 Copy Text</button>
 
   <div class="image-container">
     <img id="img1" src="">
     <img id="img2" src="">
   </div>
-
-  <button onclick="pickText()">🎲 Pick Text</button>
   <button onclick="pickImage()">🖼️ Pick Image</button>
-  <button onclick="copyText()">📋 Copy Text</button>
   <p class="note">🧠 Long press the image to copy on iPhone.</p>
+
+  <textarea id="captionBox" rows="2" readonly style="width: 100%; margin-bottom: 10px;"></textarea>
+  <button onclick="pickCaption()">🎲 Pick Caption</button>
+  <button onclick="copyCaption()">📋 Copy Caption</button>
 
   <button onclick="openProfileModal()">➕ Add Profiles</button>
   <button onclick="document.getElementById('textModal').style.display='block'">📝 Add Text Templates</button>
@@ -120,33 +126,56 @@
 <script>
 let profiles = JSON.parse(localStorage.getItem("profiles") || "[]");
 let texts = JSON.parse(localStorage.getItem("texts") || "[]");
-let usedTexts = [], usedImages = [];
+let usedTexts = [], usedImages = [], usedCaptions = [];
 let images = [], currentIndex = 0;
+
+let captions = [
+  "this light felt kinda nice", "another day, another outfit i almost didn’t wear",
+  "nothing crazy, just me", "this felt like a good time to post",
+  "little snapshot of life rn", "things are okay and that’s enough",
+  "thought these looked kinda cute", "just going with it",
+  "small things are the big things", "no big caption, just vibes",
+  "in my own little world", "guess who remembered to take pics for once",
+  "this week in a few photos", "not much going on but that’s fine",
+  "just here, doing my best", "felt kinda peaceful",
+  "no idea what i’m doing but okay", "life lately, kinda like this",
+  "trying to stay present", "quiet moments and blurry photos",
+  "moodboard: this", "little calm in the chaos",
+  "brain = fog, photos = cute", "looked up and liked the view",
+  "current setting: soft", "just a few saved memories",
+  "this version of me feels good", "casually existing"
+];
 
 function updateProfile() {
   if (!profiles.length) return;
   const p = profiles[currentIndex];
   document.getElementById("profileInfo").textContent = `${p.username} > ${p.location} (${p.container})`;
   document.getElementById("textBox").value = "";
+  document.getElementById("captionBox").value = "";
   document.getElementById("img1").src = "";
   document.getElementById("img2").src = "";
 }
 
 function nextProfile() {
   if (currentIndex < profiles.length - 1) currentIndex++;
-  usedTexts = []; usedImages = [];
+  usedTexts = []; usedImages = []; usedCaptions = [];
   updateProfile();
 }
 
 function prevProfile() {
   if (currentIndex > 0) currentIndex--;
-  usedTexts = []; usedImages = [];
+  usedTexts = []; usedImages = []; usedCaptions = [];
   updateProfile();
 }
 
 function copyText() {
   const txt = document.getElementById("textBox").value;
   navigator.clipboard.writeText(txt).then(() => alert("Copied!"));
+}
+
+function copyCaption() {
+  const txt = document.getElementById("captionBox").value;
+  navigator.clipboard.writeText(txt).then(() => alert("Caption copied!"));
 }
 
 function pickText() {
@@ -159,6 +188,14 @@ function pickText() {
   document.getElementById("textBox").value = pick.replace("(loc)", loc);
 }
 
+function pickCaption() {
+  let pool = captions.filter(c => !usedCaptions.includes(c));
+  if (!pool.length) usedCaptions = [], pool = captions;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  usedCaptions.push(pick);
+  document.getElementById("captionBox").value = pick;
+}
+
 function pickImage() {
   if (!images.length) return alert("No images!");
   let pool = images.map((_, i) => i).filter(i => !usedImages.includes(i));
@@ -168,6 +205,16 @@ function pickImage() {
   const [img1, img2] = images[idx];
   document.getElementById("img1").src = img1;
   document.getElementById("img2").src = img2;
+}
+
+function openInstagram() {
+  const username = profiles[currentIndex]?.username;
+  if (username) window.open(`https://instagram.com/${username}`, "_blank");
+}
+
+function openThreads() {
+  const username = profiles[currentIndex]?.username;
+  if (username) window.open(`https://www.threads.net/@${username}`, "_blank");
 }
 
 function uploadImages(e) {
@@ -222,7 +269,6 @@ function handlePaste(event) {
 function buildProfileTable() {
   const tbody = document.querySelector("#profileTable tbody");
   tbody.innerHTML = "";
-
   for (let i = 0; i < 60; i++) {
     const existing = profiles[i] || { username: "", location: "", container: "" };
     const row = document.createElement("tr");
@@ -240,7 +286,6 @@ function openProfileModal() {
   document.getElementById("profileModal").style.display = "block";
 }
 
-// Init
 images = JSON.parse(localStorage.getItem("images") || "[]");
 updateProfile();
 </script>
