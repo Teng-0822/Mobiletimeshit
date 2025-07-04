@@ -58,7 +58,6 @@
     }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 6px; }
-    p.note { font-size: 13px; color: #888; }
     input[type="text"] {
       width: 100%;
       padding: 5px;
@@ -88,9 +87,7 @@
     <img id="img2" src="">
   </div>
   <button onclick="pickImage()">🖼️ Pick Image</button>
-  <p class="note">🧠 Long press the image to copy on iPhone.</p>
 
-  <textarea id="captionBox" rows="2" readonly style="width: 100%; margin-bottom: 10px;"></textarea>
   <button onclick="pickCaption()">🎲 Pick Caption</button>
   <button onclick="copyCaption()">📋 Copy Caption</button>
 
@@ -151,7 +148,6 @@ function updateProfile() {
   const p = profiles[currentIndex];
   document.getElementById("profileInfo").textContent = `${p.username} > ${p.location} (${p.container})`;
   document.getElementById("textBox").value = "";
-  document.getElementById("captionBox").value = "";
   document.getElementById("img1").src = "";
   document.getElementById("img2").src = "";
 }
@@ -174,8 +170,18 @@ function copyText() {
 }
 
 function copyCaption() {
-  const txt = document.getElementById("captionBox").value;
-  navigator.clipboard.writeText(txt).then(() => alert("Caption copied!"));
+  const caption = captions[currentCaptionIndex] || "";
+  navigator.clipboard.writeText(caption).then(() => alert("Caption copied!"));
+}
+
+let currentCaptionIndex = 0;
+function pickCaption() {
+  let pool = captions.filter(c => !usedCaptions.includes(c));
+  if (!pool.length) usedCaptions = [], pool = captions;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  usedCaptions.push(pick);
+  currentCaptionIndex = captions.indexOf(pick);
+  alert("Caption: " + pick);
 }
 
 function pickText() {
@@ -186,14 +192,6 @@ function pickText() {
   usedTexts.push(pick);
   const loc = profiles[currentIndex].location;
   document.getElementById("textBox").value = pick.replace("(loc)", loc);
-}
-
-function pickCaption() {
-  let pool = captions.filter(c => !usedCaptions.includes(c));
-  if (!pool.length) usedCaptions = [], pool = captions;
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  usedCaptions.push(pick);
-  document.getElementById("captionBox").value = pick;
 }
 
 function pickImage() {
