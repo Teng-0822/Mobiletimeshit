@@ -115,6 +115,7 @@
       <h3>Text Templates</h3>
       <textarea id="textTemplates" rows="10" placeholder="1 template per line…"></textarea>
       <button onclick="saveTexts()">✅ Save Texts</button>
+      <button onclick="clearTexts()">🧹 Clear Texts</button>
       <button onclick="document.getElementById('textModal').style.display='none'">❌ Close</button>
     </div>
   </div>
@@ -251,6 +252,12 @@ function saveTexts() {
   texts = document.getElementById("textTemplates").value.split(/\r?\n/).filter(Boolean);
   localStorage.setItem("texts", JSON.stringify(texts));
   alert("Texts saved!");
+}
+function clearTexts() {
+  localStorage.removeItem("texts");
+  texts = [];
+  document.getElementById("textTemplates").value = "";
+  alert("Text templates cleared.");
 }
 
 function saveProfiles() {
