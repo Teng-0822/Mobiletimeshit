@@ -122,8 +122,11 @@
 <script>
 let profiles = JSON.parse(localStorage.getItem("profiles") || "[]");
 let texts = JSON.parse(localStorage.getItem("texts") || "[]");
-let usedTexts = [], usedImages = [], usedCaptions = [];
-let images = [], currentIndex = 0;
+let usedTexts = JSON.parse(localStorage.getItem("usedTexts") || "{}");
+let usedImages = JSON.parse(localStorage.getItem("usedImages") || "{}");
+let usedCaptions = JSON.parse(localStorage.getItem("usedCaptions") || "{}");
+let images = JSON.parse(localStorage.getItem("images") || "[]");
+let currentIndex = 0;
 
 let captions = [
   "this light felt kinda nice", "another day, another outfit i almost didn’t wear",
@@ -153,13 +156,11 @@ function updateProfile() {
 
 function nextProfile() {
   if (currentIndex < profiles.length - 1) currentIndex++;
-  usedTexts = []; usedImages = []; usedCaptions = [];
   updateProfile();
 }
 
 function prevProfile() {
   if (currentIndex > 0) currentIndex--;
-  usedTexts = []; usedImages = []; usedCaptions = [];
   updateProfile();
 }
 
@@ -175,20 +176,32 @@ function copyCaption() {
 
 let currentCaptionIndex = 0;
 function pickCaption() {
-  let pool = captions.filter(c => !usedCaptions.includes(c));
-  if (!pool.length) usedCaptions = [], pool = captions;
+  const key = currentIndex;
+  const used = usedCaptions[key] || [];
+
+  let pool = captions.filter(c => !used.includes(c));
+  if (!pool.length) usedCaptions[key] = [], pool = captions;
+
   const pick = pool[Math.floor(Math.random() * pool.length)];
-  usedCaptions.push(pick);
+  usedCaptions[key] = [...(usedCaptions[key] || []), pick];
+  localStorage.setItem("usedCaptions", JSON.stringify(usedCaptions));
+
   currentCaptionIndex = captions.indexOf(pick);
   alert("Caption: " + pick);
 }
 
 function pickText() {
   if (!texts.length) return alert("No texts!");
-  let pool = texts.filter(t => !usedTexts.includes(t));
-  if (!pool.length) usedTexts = [], pool = texts;
+  const key = currentIndex;
+  const used = usedTexts[key] || [];
+
+  let pool = texts.filter(t => !used.includes(t));
+  if (!pool.length) usedTexts[key] = [], pool = texts;
+
   const pick = pool[Math.floor(Math.random() * pool.length)];
-  usedTexts.push(pick);
+  usedTexts[key] = [...(usedTexts[key] || []), pick];
+  localStorage.setItem("usedTexts", JSON.stringify(usedTexts));
+
   const loc = profiles[currentIndex].location;
   const replaced = pick.replaceAll("(loc)", loc);
   document.getElementById("textBox").value = replaced;
@@ -196,10 +209,16 @@ function pickText() {
 
 function pickImage() {
   if (!images.length) return alert("No images!");
-  let pool = images.map((_, i) => i).filter(i => !usedImages.includes(i));
-  if (!pool.length) usedImages = [], pool = images.map((_, i) => i);
+  const key = currentIndex;
+  const used = usedImages[key] || [];
+
+  let pool = images.map((_, i) => i).filter(i => !used.includes(i));
+  if (!pool.length) usedImages[key] = [], pool = images.map((_, i) => i);
+
   const idx = pool[Math.floor(Math.random() * pool.length)];
-  usedImages.push(idx);
+  usedImages[key] = [...(usedImages[key] || []), idx];
+  localStorage.setItem("usedImages", JSON.stringify(usedImages));
+
   const [img1, img2] = images[idx];
   document.getElementById("img1").src = img1;
   document.getElementById("img2").src = img2;
@@ -213,13 +232,13 @@ function openThreads() {
 function uploadImages(e) {
   const files = Array.from(e.target.files);
   if (files.length % 2 !== 0) return alert("Upload images in sets of 2!");
-  images = [];
   const readers = files.map(f => new Promise(res => {
     const r = new FileReader();
     r.onload = () => res(r.result);
     r.readAsDataURL(f);
   }));
   Promise.all(readers).then(data => {
+    images = [];
     for (let i = 0; i < data.length; i += 2) {
       images.push([data[i], data[i + 1]]);
     }
@@ -279,7 +298,6 @@ function openProfileModal() {
   document.getElementById("profileModal").style.display = "block";
 }
 
-images = JSON.parse(localStorage.getItem("images") || "[]");
 updateProfile();
 </script>
 
