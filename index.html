@@ -24,11 +24,16 @@
     }
     .nav-btns { display: flex; justify-content: space-between; }
     .profile-info { font-size: 18px; margin: 10px 0; }
+    .image-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 4%;
+      margin: 10px 0;
+    }
     .image-container img {
       width: 48%;
       height: 200px;
       object-fit: cover;
-      margin: 1%;
       border-radius: 8px;
       background: #ccc;
     }
@@ -99,36 +104,11 @@
   </div>
 
 <script>
-// IndexedDB image storage
-const dbName = "ImageDB", storeName = "images";
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(dbName, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(storeName, { keyPath: "id" });
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-async function saveImageToDB(id, imagePair) {
-  const db = await openDB();
-  const tx = db.transaction(storeName, "readwrite").objectStore(storeName).put({ id, images: imagePair });
-}
-async function getAllImagesFromDB() {
-  const db = await openDB();
-  const tx = db.transaction(storeName).objectStore(storeName);
-  return new Promise(resolve => {
-    const req = tx.getAll();
-    req.onsuccess = () => resolve(req.result.map(e => e.images));
-  });
-}
-
-// Variables
 let profiles = JSON.parse(localStorage.getItem("profiles") || "[]");
 let texts = JSON.parse(localStorage.getItem("texts") || "[]");
 let usedTexts = [], usedImages = [];
 let images = [], currentIndex = 0;
 
-// Profile Display
 function updateProfile() {
   if (!profiles.length) return;
   const p = profiles[currentIndex];
@@ -137,24 +117,24 @@ function updateProfile() {
   document.getElementById("img1").src = "";
   document.getElementById("img2").src = "";
 }
+
 function nextProfile() {
   if (currentIndex < profiles.length - 1) currentIndex++;
   usedTexts = []; usedImages = [];
   updateProfile();
 }
+
 function prevProfile() {
   if (currentIndex > 0) currentIndex--;
   usedTexts = []; usedImages = [];
   updateProfile();
 }
 
-// Copy Text
 function copyText() {
   const txt = document.getElementById("textBox").value;
   navigator.clipboard.writeText(txt).then(() => alert("Copied!"));
 }
 
-// Pick Text
 function pickText() {
   if (!texts.length) return alert("No texts!");
   let pool = texts.filter(t => !usedTexts.includes(t));
@@ -165,10 +145,9 @@ function pickText() {
   document.getElementById("textBox").value = pick.replace("(loc)", loc);
 }
 
-// Pick Image
 function pickImage() {
   if (!images.length) return alert("No images!");
-  let pool = images.filter((_, i) => !usedImages.includes(i));
+  let pool = images.map((_, i) => i).filter(i => !usedImages.includes(i));
   if (!pool.length) usedImages = [], pool = images.map((_, i) => i);
   const idx = pool[Math.floor(Math.random() * pool.length)];
   usedImages.push(idx);
@@ -177,66 +156,70 @@ function pickImage() {
   document.getElementById("img2").src = img2;
 }
 
-// Upload Images
-async function uploadImages(e) {
+function uploadImages(e) {
   const files = Array.from(e.target.files);
   if (files.length % 2 !== 0) return alert("Upload images in sets of 2!");
-  for (let i = 0; i < files.length; i += 2) {
-    const r1 = await fileToBase64(files[i]);
-    const r2 = await fileToBase64(files[i+1]);
-    const pair = [r1, r2];
-    await saveImageToDB(Date.now() + "_" + i, pair);
-  }
-  images = await getAllImagesFromDB();
-  localStorage.setItem("images", JSON.stringify(images));
-  alert("Images saved!");
-}
-function fileToBase64(file) {
-  return new Promise(res => {
+  images = [];
+  const readers = files.map(f => new Promise(res => {
     const r = new FileReader();
     r.onload = () => res(r.result);
-    r.readAsDataURL(file);
+    r.readAsDataURL(f);
+  }));
+  Promise.all(readers).then(data => {
+    for (let i = 0; i < data.length; i += 2) {
+      images.push([data[i], data[i + 1]]);
+    }
+    localStorage.setItem("images", JSON.stringify(images));
+    alert("Images saved!");
   });
 }
 
-// Save Texts
 function saveTexts() {
   texts = document.getElementById("textTemplates").value.split(/\r?\n/).filter(Boolean);
   localStorage.setItem("texts", JSON.stringify(texts));
   alert("Texts saved!");
 }
 
-// Profile Table
 function saveProfiles() {
   profiles = [];
   for (let i = 0; i < 60; i++) {
-    const u = document.getElementById("u"+i).value;
-    const l = document.getElementById("l"+i).value;
-    const c = document.getElementById("c"+i).value;
+    const u = document.getElementById("u" + i).value;
+    const l = document.getElementById("l" + i).value;
+    const c = document.getElementById("c" + i).value;
     if (u && l) profiles.push({ username: u, location: l, container: c });
   }
   localStorage.setItem("profiles", JSON.stringify(profiles));
   document.getElementById("profileModal").style.display = "none";
   updateProfile();
 }
+
+function handlePaste(event, type) {
+  event.preventDefault();
+  const paste = (event.clipboardData || window.clipboardData).getData("text");
+  const values = paste.split(/\r?\n|,|\t/).map(v => v.trim()).filter(Boolean);
+  for (let i = 0; i < values.length && i < 60; i++) {
+    document.getElementById(`${type}${i}`).value = values[i];
+  }
+}
+
 function buildProfileTable() {
   const t = document.getElementById("profileTable");
+  t.innerHTML = "";
   for (let i = 0; i < 60; i++) {
     const r = document.createElement("tr");
-    r.innerHTML = `<td><input id="u${i}" placeholder="Username"></td>
-                   <td><input id="l${i}" placeholder="Location"></td>
-                   <td><input id="c${i}" placeholder="Container ID"></td>`;
+    r.innerHTML = `
+      <td><input id="u${i}" onpaste="handlePaste(event, 'u')" placeholder="Username"></td>
+      <td><input id="l${i}" onpaste="handlePaste(event, 'l')" placeholder="Location"></td>
+      <td><input id="c${i}" onpaste="handlePaste(event, 'c')" placeholder="Container ID"></td>
+    `;
     t.appendChild(r);
   }
 }
 
-// INIT
-(async () => {
-  buildProfileTable();
-  images = await getAllImagesFromDB();
-  if (!images.length) images = JSON.parse(localStorage.getItem("images") || "[]");
-  updateProfile();
-})();
+// Init
+buildProfileTable();
+images = JSON.parse(localStorage.getItem("images") || "[]");
+updateProfile();
 </script>
 
 </body>
