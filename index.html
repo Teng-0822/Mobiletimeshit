@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mobile Profile Manager</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      margin: 0;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    button {
+      padding: 10px 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    textarea, input[type="file"] {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .nav-btns { display: flex; justify-content: space-between; }
+    .profile-info { font-size: 18px; margin: 10px 0; }
+    .image-container img {
+      width: 48%;
+      height: 200px;
+      object-fit: cover;
+      margin: 1%;
+      border-radius: 8px;
+      background: #ccc;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 10;
+    }
+    .modal-content {
+      background: #fff;
+      margin: 5% auto;
+      padding: 10px;
+      border-radius: 10px;
+      width: 95%;
+      max-height: 80%;
+      overflow-y: auto;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: 4px; }
+    p.note { font-size: 13px; color: #888; }
+  </style>
+</head>
+<body>
+
+  <div class="nav-btns">
+    <button onclick="prevProfile()">⬅️ Prev</button>
+    <button onclick="nextProfile()">Next ➡️</button>
+  </div>
+
+  <div class="profile-info" id="profileInfo">username > location (container)</div>
+
+  <textarea id="textBox" rows="4" placeholder="Your text will appear here..."></textarea>
+
+  <div class="image-container">
+    <img id="img1" src="">
+    <img id="img2" src="">
+  </div>
+
+  <button onclick="pickText()">🎲 Pick Text</button>
+  <button onclick="pickImage()">🖼️ Pick Image</button>
+  <button onclick="copyText()">📋 Copy Text</button>
+  <p class="note">🧠 Long press the image to save manually for Threads.</p>
+
+  <button onclick="document.getElementById('profileModal').style.display='block'">➕ Add Profiles</button>
+  <button onclick="document.getElementById('textModal').style.display='block'">📝 Add Text Templates</button>
+  <input type="file" accept="image/*" multiple onchange="uploadImages(event)">
+
+  <!-- Profile Modal -->
+  <div class="modal" id="profileModal">
+    <div class="modal-content">
+      <h3>Paste Profiles</h3>
+      <table id="profileTable"></table>
+      <button onclick="saveProfiles()">✅ Save</button>
+      <button onclick="document.getElementById('profileModal').style.display='none'">❌ Close</button>
+    </div>
+  </div>
+
+  <!-- Text Modal -->
+  <div class="modal" id="textModal">
+    <div class="modal-content">
+      <h3>Text Templates</h3>
+      <textarea id="textTemplates" rows="10" placeholder="1 text per line..."></textarea>
+      <button onclick="saveTexts()">✅ Save Texts</button>
+      <button onclick="document.getElementById('textModal').style.display='none'">❌ Close</button>
+    </div>
+  </div>
+
+<script>
+// IndexedDB image storage
+const dbName = "ImageDB", storeName = "images";
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(dbName, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(storeName, { keyPath: "id" });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function saveImageToDB(id, imagePair) {
+  const db = await openDB();
+  const tx = db.transaction(storeName, "readwrite").objectStore(storeName).put({ id, images: imagePair });
+}
+async function getAllImagesFromDB() {
+  const db = await openDB();
+  const tx = db.transaction(storeName).objectStore(storeName);
+  return new Promise(resolve => {
+    const req = tx.getAll();
+    req.onsuccess = () => resolve(req.result.map(e => e.images));
+  });
+}
+
+// Variables
+let profiles = JSON.parse(localStorage.getItem("profiles") || "[]");
+let texts = JSON.parse(localStorage.getItem("texts") || "[]");
+let usedTexts = [], usedImages = [];
+let images = [], currentIndex = 0;
+
+// Profile Display
+function updateProfile() {
+  if (!profiles.length) return;
+  const p = profiles[currentIndex];
+  document.getElementById("profileInfo").textContent = `${p.username} > ${p.location} (${p.container})`;
+  document.getElementById("textBox").value = "";
+  document.getElementById("img1").src = "";
+  document.getElementById("img2").src = "";
+}
+function nextProfile() {
+  if (currentIndex < profiles.length - 1) currentIndex++;
+  usedTexts = []; usedImages = [];
+  updateProfile();
+}
+function prevProfile() {
+  if (currentIndex > 0) currentIndex--;
+  usedTexts = []; usedImages = [];
+  updateProfile();
+}
+
+// Copy Text
+function copyText() {
+  const txt = document.getElementById("textBox").value;
+  navigator.clipboard.writeText(txt).then(() => alert("Copied!"));
+}
+
+// Pick Text
+function pickText() {
+  if (!texts.length) return alert("No texts!");
+  let pool = texts.filter(t => !usedTexts.includes(t));
+  if (!pool.length) usedTexts = [], pool = texts;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  usedTexts.push(pick);
+  const loc = profiles[currentIndex].location;
+  document.getElementById("textBox").value = pick.replace("(loc)", loc);
+}
+
+// Pick Image
+function pickImage() {
+  if (!images.length) return alert("No images!");
+  let pool = images.filter((_, i) => !usedImages.includes(i));
+  if (!pool.length) usedImages = [], pool = images.map((_, i) => i);
+  const idx = pool[Math.floor(Math.random() * pool.length)];
+  usedImages.push(idx);
+  const [img1, img2] = images[idx];
+  document.getElementById("img1").src = img1;
+  document.getElementById("img2").src = img2;
+}
+
+// Upload Images
+async function uploadImages(e) {
+  const files = Array.from(e.target.files);
+  if (files.length % 2 !== 0) return alert("Upload images in sets of 2!");
+  for (let i = 0; i < files.length; i += 2) {
+    const r1 = await fileToBase64(files[i]);
+    const r2 = await fileToBase64(files[i+1]);
+    const pair = [r1, r2];
+    await saveImageToDB(Date.now() + "_" + i, pair);
+  }
+  images = await getAllImagesFromDB();
+  localStorage.setItem("images", JSON.stringify(images));
+  alert("Images saved!");
+}
+function fileToBase64(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.readAsDataURL(file);
+  });
+}
+
+// Save Texts
+function saveTexts() {
+  texts = document.getElementById("textTemplates").value.split(/\r?\n/).filter(Boolean);
+  localStorage.setItem("texts", JSON.stringify(texts));
+  alert("Texts saved!");
+}
+
+// Profile Table
+function saveProfiles() {
+  profiles = [];
+  for (let i = 0; i < 60; i++) {
+    const u = document.getElementById("u"+i).value;
+    const l = document.getElementById("l"+i).value;
+    const c = document.getElementById("c"+i).value;
+    if (u && l) profiles.push({ username: u, location: l, container: c });
+  }
+  localStorage.setItem("profiles", JSON.stringify(profiles));
+  document.getElementById("profileModal").style.display = "none";
+  updateProfile();
+}
+function buildProfileTable() {
+  const t = document.getElementById("profileTable");
+  for (let i = 0; i < 60; i++) {
+    const r = document.createElement("tr");
+    r.innerHTML = `<td><input id="u${i}" placeholder="Username"></td>
+                   <td><input id="l${i}" placeholder="Location"></td>
+                   <td><input id="c${i}" placeholder="Container ID"></td>`;
+    t.appendChild(r);
+  }
+}
+
+// INIT
+(async () => {
+  buildProfileTable();
+  images = await getAllImagesFromDB();
+  if (!images.length) images = JSON.parse(localStorage.getItem("images") || "[]");
+  updateProfile();
+})();
+</script>
+
+</body>
+</html>
