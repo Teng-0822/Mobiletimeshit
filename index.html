@@ -73,8 +73,7 @@
 
   <div class="profile-info" id="profileInfo">username > location (container)</div>
 
-  <div style="display: flex; justify-content: space-around; margin: 10px 0;">
-    <button onclick="openInstagram()">📸 Instagram</button>
+  <div style="display: flex; justify-content: center; margin: 10px 0;">
     <button onclick="openThreads()">🧵 Threads</button>
   </div>
 
@@ -191,7 +190,8 @@ function pickText() {
   const pick = pool[Math.floor(Math.random() * pool.length)];
   usedTexts.push(pick);
   const loc = profiles[currentIndex].location;
-  document.getElementById("textBox").value = pick.replace("(loc)", loc);
+  const replaced = pick.replaceAll("(loc)", loc);
+  document.getElementById("textBox").value = replaced;
 }
 
 function pickImage() {
@@ -203,11 +203,6 @@ function pickImage() {
   const [img1, img2] = images[idx];
   document.getElementById("img1").src = img1;
   document.getElementById("img2").src = img2;
-}
-
-function openInstagram() {
-  const username = profiles[currentIndex]?.username;
-  if (username) window.open(`https://instagram.com/${username}`, "_blank");
 }
 
 function openThreads() {
