@@ -8,24 +8,47 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
       margin: 0;
       padding: 20px;
-      background: #f5f5f5;
+      background: #e7f0f7;
     }
     button {
-      padding: 10px;
+      padding: 12px 16px;
       margin: 5px;
       border: none;
-      border-radius: 5px;
+      border-radius: 15px;
       font-size: 16px;
       cursor: pointer;
+      background: linear-gradient(to bottom, #ffffff, #dfeffc);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      transition: 0.2s ease-in-out;
+    }
+    button:hover {
+      background: linear-gradient(to bottom, #f0faff, #cde7ff);
+      transform: translateY(-1px);
     }
     textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
       margin-bottom: 10px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
     }
-    .nav-btns { display: flex; justify-content: space-between; }
-    .profile-info { font-size: 18px; margin: 10px 0; text-align: center; }
+    .nav-btns {
+      display: flex;
+      justify-content: space-between;
+    }
+    .profile-info {
+      font-size: 16px;
+      margin: 12px 0;
+      text-align: center;
+      background: #ffffff;
+      padding: 14px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      word-wrap: break-word;
+      color: #333;
+    }
     .image-container {
       display: flex;
       justify-content: space-between;
@@ -36,8 +59,9 @@
       width: 48%;
       height: 200px;
       object-fit: cover;
-      border-radius: 8px;
-      background: #ccc;
+      border-radius: 12px;
+      background: #ddd;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .modal {
       display: none;
@@ -50,44 +74,61 @@
     .modal-content {
       background: white;
       margin: 5% auto;
-      padding: 10px;
-      border-radius: 10px;
+      padding: 20px;
+      border-radius: 15px;
       width: 95%;
       max-height: 85%;
-      overflow-y: scroll;
+      overflow-y: auto;
     }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 6px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
     input[type="text"] {
       width: 100%;
-      padding: 5px;
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+    input[type="file"] {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-
   <div class="nav-btns">
     <button onclick="prevProfile()">⬅️ Prev</button>
     <button onclick="nextProfile()">Next ➡️</button>
   </div>
 
-  <div class="profile-info" id="profileInfo">username > location (container)</div>
+  <div class="profile-info" id="profileInfo">
+    <strong id="profileUsername">username</strong><br>
+    <span id="profileLocation">Location</span><br>
+    <small id="profileContainer">Container ID</small>
+  </div>
 
   <div style="display: flex; justify-content: center; margin: 10px 0;">
     <button onclick="openThreads()">🧵 Threads</button>
   </div>
 
   <textarea id="textBox" rows="4" placeholder="Your text will appear here..."></textarea>
-  <button onclick="pickText()">🎲 Pick Text</button>
+  <button onclick="generateContent()">⚡ Generate</button>
   <button onclick="copyText()">📋 Copy Text</button>
 
   <div class="image-container">
     <img id="img1" src="">
     <img id="img2" src="">
   </div>
-  <button onclick="pickImage()">🖼️ Pick Image</button>
 
-  <button onclick="pickCaption()">🎲 Pick Caption</button>
   <button onclick="copyCaption()">📋 Copy Caption</button>
 
   <button onclick="openProfileModal()">➕ Add Profiles</button>
@@ -112,8 +153,16 @@
   <!-- Add Text Templates Modal -->
   <div class="modal" id="textModal">
     <div class="modal-content">
-      <h3>Text Templates</h3>
-      <textarea id="textTemplates" rows="10" placeholder="1 template per line…"></textarea>
+      <h3>Text Templates (Mon - Sun)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Templates (1 per line)</th>
+          </tr>
+        </thead>
+        <tbody id="textTemplateBody"></tbody>
+      </table>
       <button onclick="saveTexts()">✅ Save Texts</button>
       <button onclick="clearTexts()">🧹 Clear Texts</button>
       <button onclick="document.getElementById('textModal').style.display='none'">❌ Close</button>
@@ -122,108 +171,37 @@
 
 <script>
 let profiles = JSON.parse(localStorage.getItem("profiles") || "[]");
-let texts = JSON.parse(localStorage.getItem("texts") || "[]");
-let usedTexts = JSON.parse(localStorage.getItem("usedTexts") || "{}");
-let usedImages = JSON.parse(localStorage.getItem("usedImages") || "{}");
-let usedCaptions = JSON.parse(localStorage.getItem("usedCaptions") || "{}");
 let images = JSON.parse(localStorage.getItem("images") || "[]");
-let currentIndex = 0;
-
 let captions = [
   "this light felt kinda nice", "another day, another outfit i almost didn’t wear",
   "nothing crazy, just me", "this felt like a good time to post",
   "little snapshot of life rn", "things are okay and that’s enough",
   "thought these looked kinda cute", "just going with it",
-  "small things are the big things", "no big caption, just vibes",
-  "in my own little world", "guess who remembered to take pics for once",
-  "this week in a few photos", "not much going on but that’s fine",
-  "just here, doing my best", "felt kinda peaceful",
-  "no idea what i’m doing but okay", "life lately, kinda like this",
-  "trying to stay present", "quiet moments and blurry photos",
-  "moodboard: this", "little calm in the chaos",
-  "brain = fog, photos = cute", "looked up and liked the view",
-  "current setting: soft", "just a few saved memories",
-  "this version of me feels good", "casually existing"
+  "small things are the big things", "no big caption, just vibes"
 ];
+let texts = JSON.parse(localStorage.getItem("texts") || "{}");
+let usedTexts = JSON.parse(localStorage.getItem("usedTexts") || "{}");
+let usedImages = JSON.parse(localStorage.getItem("usedImages") || "{}");
+let usedCaptions = JSON.parse(localStorage.getItem("usedCaptions") || "{}");
+let currentIndex = 0;
+
+function getUSAday() {
+  return new Date().toLocaleDateString("en-US", { weekday: "long", timeZone: "America/New_York" });
+}
 
 function updateProfile() {
   if (!profiles.length) return;
   const p = profiles[currentIndex];
-  document.getElementById("profileInfo").textContent = `${p.username} > ${p.location} (${p.container})`;
+  document.getElementById("profileUsername").textContent = p.username;
+  document.getElementById("profileLocation").textContent = p.location;
+  document.getElementById("profileContainer").textContent = p.container;
   document.getElementById("textBox").value = "";
   document.getElementById("img1").src = "";
   document.getElementById("img2").src = "";
 }
 
-function nextProfile() {
-  if (currentIndex < profiles.length - 1) currentIndex++;
-  updateProfile();
-}
-
-function prevProfile() {
-  if (currentIndex > 0) currentIndex--;
-  updateProfile();
-}
-
-function copyText() {
-  const txt = document.getElementById("textBox").value;
-  navigator.clipboard.writeText(txt).then(() => alert("Copied!"));
-}
-
-function copyCaption() {
-  const caption = captions[currentCaptionIndex] || "";
-  navigator.clipboard.writeText(caption).then(() => alert("Caption copied!"));
-}
-
-let currentCaptionIndex = 0;
-function pickCaption() {
-  const key = currentIndex;
-  const used = usedCaptions[key] || [];
-
-  let pool = captions.filter(c => !used.includes(c));
-  if (!pool.length) usedCaptions[key] = [], pool = captions;
-
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  usedCaptions[key] = [...(usedCaptions[key] || []), pick];
-  localStorage.setItem("usedCaptions", JSON.stringify(usedCaptions));
-
-  currentCaptionIndex = captions.indexOf(pick);
-  alert("Caption: " + pick);
-}
-
-function pickText() {
-  if (!texts.length) return alert("No texts!");
-  const key = currentIndex;
-  const used = usedTexts[key] || [];
-
-  let pool = texts.filter(t => !used.includes(t));
-  if (!pool.length) usedTexts[key] = [], pool = texts;
-
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  usedTexts[key] = [...(usedTexts[key] || []), pick];
-  localStorage.setItem("usedTexts", JSON.stringify(usedTexts));
-
-  const loc = profiles[currentIndex].location;
-  const replaced = pick.replaceAll("(loc)", loc);
-  document.getElementById("textBox").value = replaced;
-}
-
-function pickImage() {
-  if (!images.length) return alert("No images!");
-  const key = currentIndex;
-  const used = usedImages[key] || [];
-
-  let pool = images.map((_, i) => i).filter(i => !used.includes(i));
-  if (!pool.length) usedImages[key] = [], pool = images.map((_, i) => i);
-
-  const idx = pool[Math.floor(Math.random() * pool.length)];
-  usedImages[key] = [...(usedImages[key] || []), idx];
-  localStorage.setItem("usedImages", JSON.stringify(usedImages));
-
-  const [img1, img2] = images[idx];
-  document.getElementById("img1").src = img1;
-  document.getElementById("img2").src = img2;
-}
+function nextProfile() { if (currentIndex < profiles.length - 1) currentIndex++; updateProfile(); }
+function prevProfile() { if (currentIndex > 0) currentIndex--; updateProfile(); }
 
 function openThreads() {
   const username = profiles[currentIndex]?.username;
@@ -248,24 +226,57 @@ function uploadImages(e) {
   });
 }
 
-function saveTexts() {
-  texts = document.getElementById("textTemplates").value.split(/\r?\n/).filter(Boolean);
-  localStorage.setItem("texts", JSON.stringify(texts));
-  alert("Texts saved!");
+function generateContent() {
+  const key = currentIndex;
+
+  // Pick image
+  const usedI = usedImages[key] || [];
+  let poolI = images.map((_, i) => i).filter(i => !usedI.includes(i));
+  if (!poolI.length) usedImages[key] = [], poolI = images.map((_, i) => i);
+  const idx = poolI[Math.floor(Math.random() * poolI.length)];
+  usedImages[key] = [...(usedImages[key] || []), idx];
+  localStorage.setItem("usedImages", JSON.stringify(usedImages));
+  [document.getElementById("img1").src, document.getElementById("img2").src] = images[idx];
+
+  // Pick caption
+  const usedC = usedCaptions[key] || [];
+  let poolC = captions.filter(c => !usedC.includes(c));
+  if (!poolC.length) usedCaptions[key] = [], poolC = captions;
+  const caption = poolC[Math.floor(Math.random() * poolC.length)];
+  usedCaptions[key] = [...(usedCaptions[key] || []), caption];
+  localStorage.setItem("usedCaptions", JSON.stringify(usedCaptions));
+
+  // Pick text
+  const day = getUSAday();
+  const textList = texts[day] || [];
+  const usedT = usedTexts[key]?.[day] || [];
+  let poolT = textList.filter(t => !usedT.includes(t));
+  if (!poolT.length) usedT.length = 0, poolT = textList;
+  const pick = poolT[Math.floor(Math.random() * poolT.length)];
+  if (!usedTexts[key]) usedTexts[key] = {};
+  if (!usedTexts[key][day]) usedTexts[key][day] = [];
+  usedTexts[key][day].push(pick);
+  localStorage.setItem("usedTexts", JSON.stringify(usedTexts));
+  const loc = profiles[key].location;
+  document.getElementById("textBox").value = pick.replaceAll("(loc)", loc);
 }
-function clearTexts() {
-  localStorage.removeItem("texts");
-  texts = [];
-  document.getElementById("textTemplates").value = "";
-  alert("Text templates cleared.");
+
+function copyText() {
+  const txt = document.getElementById("textBox").value;
+  navigator.clipboard.writeText(txt).then(() => alert("Copied!"));
+}
+
+function copyCaption() {
+  const caption = captions.find(c => document.getElementById("textBox").value.includes(c));
+  navigator.clipboard.writeText(caption || captions[0]).then(() => alert("Caption copied!"));
 }
 
 function saveProfiles() {
   profiles = [];
   for (let i = 0; i < 60; i++) {
-    const u = document.getElementById("u" + i).value;
-    const l = document.getElementById("l" + i).value;
-    const c = document.getElementById("c" + i).value;
+    const u = document.getElementById("u" + i)?.value;
+    const l = document.getElementById("l" + i)?.value;
+    const c = document.getElementById("c" + i)?.value;
     if (u && l) profiles.push({ username: u, location: l, container: c });
   }
   localStorage.setItem("profiles", JSON.stringify(profiles));
@@ -273,16 +284,31 @@ function saveProfiles() {
   updateProfile();
 }
 
-function handlePaste(event) {
-  event.preventDefault();
-  const clipboard = (event.clipboardData || window.clipboardData).getData("text");
-  const rows = clipboard.trim().split(/\r?\n/);
-  for (let i = 0; i < rows.length && i < 60; i++) {
-    const cols = rows[i].split(/\t|,/);
-    document.getElementById("u" + i).value = cols[0] || "";
-    document.getElementById("l" + i).value = cols[1] || "";
-    document.getElementById("c" + i).value = cols[2] || "";
-  }
+function clearTexts() {
+  texts = {};
+  localStorage.removeItem("texts");
+  renderTextTable();
+}
+
+function saveTexts() {
+  texts = {};
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  days.forEach(day => {
+    const value = document.getElementById(`day_${day}`).value;
+    texts[day] = value.split(/\r?\n/).filter(Boolean);
+  });
+  localStorage.setItem("texts", JSON.stringify(texts));
+  alert("Texts saved!");
+}
+
+function renderTextTable() {
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const tbody = document.getElementById("textTemplateBody");
+  tbody.innerHTML = days.map(day => `
+    <tr>
+      <td>${day}</td>
+      <td><textarea id="day_${day}" rows="5">${(texts[day] || []).join("\n")}</textarea></td>
+    </tr>`).join("");
 }
 
 function buildProfileTable() {
@@ -300,11 +326,24 @@ function buildProfileTable() {
   }
 }
 
+function handlePaste(event) {
+  event.preventDefault();
+  const clipboard = (event.clipboardData || window.clipboardData).getData("text");
+  const rows = clipboard.trim().split(/\r?\n/);
+  for (let i = 0; i < rows.length && i < 60; i++) {
+    const cols = rows[i].split(/\t|,/);
+    document.getElementById("u" + i).value = cols[0] || "";
+    document.getElementById("l" + i).value = cols[1] || "";
+    document.getElementById("c" + i).value = cols[2] || "";
+  }
+}
+
 function openProfileModal() {
   buildProfileTable();
   document.getElementById("profileModal").style.display = "block";
 }
 
+renderTextTable();
 updateProfile();
 </script>
 
