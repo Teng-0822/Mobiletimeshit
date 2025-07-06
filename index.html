@@ -207,6 +207,7 @@ let usedTexts = JSON.parse(localStorage.getItem("usedTexts") || "{}");
 let usedImages = JSON.parse(localStorage.getItem("usedImages") || "{}");
 let usedCaptions = JSON.parse(localStorage.getItem("usedCaptions") || "{}");
 let currentIndex = 0;
+let lastCaption = "";
 
 function getUSAday() {
   return new Date().toLocaleDateString("en-US", { weekday: "long", timeZone: "America/New_York" });
@@ -251,7 +252,7 @@ function uploadImages(e) {
 
 function generateContent() {
   const key = currentIndex;
-
+  
   // Pick image
   const usedI = usedImages[key] || [];
   let poolI = images.map((_, i) => i).filter(i => !usedI.includes(i));
@@ -265,7 +266,8 @@ function generateContent() {
   const usedC = usedCaptions[key] || [];
   let poolC = captions.filter(c => !usedC.includes(c));
   if (!poolC.length) usedCaptions[key] = [], poolC = captions;
-  const caption = poolC[Math.floor(Math.random() * poolC.length)];
+  lastCaption = poolC[Math.floor(Math.random() * poolC.length)];
+  const caption = lastCaption;
   usedCaptions[key] = [...(usedCaptions[key] || []), caption];
   localStorage.setItem("usedCaptions", JSON.stringify(usedCaptions));
 
@@ -290,8 +292,8 @@ function copyText() {
 }
 
 function copyCaption() {
-  const caption = captions.find(c => document.getElementById("textBox").value.includes(c));
-  navigator.clipboard.writeText(caption || captions[0]).then(() => alert("Caption copied!"));
+  if (!lastCaption) return alert("No caption generated yet!");
+  navigator.clipboard.writeText(lastCaption).then(() => alert("Caption copied!"));
 }
 
 function saveProfiles() {
