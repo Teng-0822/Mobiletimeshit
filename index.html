@@ -107,6 +107,7 @@
 <body>
   <div class="nav-btns">
     <button onclick="prevProfile()">⬅️ Prev</button>
+    <button onclick="goToFirstProfile()">🔁 First</button>
     <button onclick="nextProfile()">Next ➡️</button>
   </div>
 
@@ -405,7 +406,11 @@ function copyRandomReply() {
   navigator.clipboard.writeText(text).then(() => alert("Random reply copied!"));
 }
 
-  
+function goToFirstProfile() {
+  if (profiles.length === 0) return alert("No profiles available.");
+  currentIndex = 0;
+  updateProfile();
+}  
 renderTextTable();
 updateProfile();
 </script>
