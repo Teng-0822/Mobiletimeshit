@@ -415,6 +415,14 @@ function goToFirstProfile() {
   currentIndex = 0;
   updateProfile();
 }  
+
+function copyCaption() {
+  if (!lastCaption) return alert("No caption generated yet!");
+  const loc = profiles[currentIndex]?.location || "(loc)";
+  const text = lastCaption.replaceAll("(loc)", loc);
+  navigator.clipboard.writeText(text).then(() => alert("Caption copied!"));
+}
+  
 renderTextTable();
 updateProfile();
 </script>
