@@ -148,6 +148,8 @@
   <button onclick="copyRandomReply()">💬Reply</button>
   <button onclick="copyCaption()">📋Cap</button>
   <button onclick="openThreads()">🧵Thrds</button>
+  <button onclick="copyRandomComment()">💬Cmnt</button>
+
   <div class="image-container">
     <img id="img1" src="">
     <img id="img2" src="">
@@ -523,6 +525,29 @@ function copyCaption() {
 
 function openThreads() {
    window.open(`https://threads.com/`, "_blank");
+}
+
+const comments = [
+  "hey", "how are you", "thanks x", "text me", "hiii", "thanks msg me", "hit me up x",
+  "let’s chat more", "ping me 💬", "slide thru", "msg me real quick", "reach out",
+  "drop a line", "chat soon?", "send a quick msg", "you know where 😏", "feel free to msg",
+  "got you, msg me", "come thru 👀", "we can talk more"
+];
+
+let usedComments = [];
+
+function copyRandomComment() {
+  if (usedComments.length === comments.length) {
+    usedComments = []; // reset after all are used
+  }
+
+  const unused = comments.filter(c => !usedComments.includes(c));
+  const randomComment = unused[Math.floor(Math.random() * unused.length)];
+  usedComments.push(randomComment);
+
+  navigator.clipboard.writeText(randomComment).then(() => {
+    alert(`Copied: "${randomComment}"`);
+  });
 }
 
 
