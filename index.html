@@ -146,8 +146,8 @@
   <button onclick="generateContent()">⚙️Gen</button>
   <button onclick="copyText()">📋Txt</button>
   <button onclick="copyRandomReply()">💬Reply</button>
-   <button onclick="copyCaption()">📋Cap</button>
-  <button onclick="window.location.href='threads://';">🧵Thrds</button>
+  <button onclick="copyCaption()">📋Cap</button>
+  <button onclick="openThreads()">🧵Thrds</button>
   <div class="image-container">
     <img id="img1" src="">
     <img id="img2" src="">
@@ -520,7 +520,12 @@ function copyCaption() {
   const text = lastCaption.replaceAll("(loc)", loc);
   navigator.clipboard.writeText(text).then(() => alert("Caption copied!"));
 }
-  
+
+function openThreads() {
+   window.location.href = "threads://";
+}
+
+
 renderTextTable();
 updateProfile();
 </script>
