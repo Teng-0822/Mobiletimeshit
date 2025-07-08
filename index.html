@@ -505,7 +505,7 @@ function copyRandomReply() {
   localStorage.setItem("usedReplies", JSON.stringify(usedReplies));
 
   const text = reply.replaceAll("(loc)", loc);
-  navigator.clipboard.writeText(text).then(() => alert("Random reply copied!"));
+  navigator.clipboard.writeText(text).then(() => showToast("Random reply copied!"));
 }
 
 function goToFirstProfile() {
@@ -518,7 +518,7 @@ function copyCaption() {
   if (!lastCaption) return alert("No caption generated yet!");
   const loc = profiles[currentIndex]?.location || "(loc)";
   const text = lastCaption.replaceAll("(loc)", loc);
-  navigator.clipboard.writeText(text).then(() => alert("Caption copied!"));
+  navigator.clipboard.writeText(text).then(() => showToast("Caption copied!"));
 }
 
 function openThreads() {
