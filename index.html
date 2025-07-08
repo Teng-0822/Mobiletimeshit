@@ -16,6 +16,20 @@
       padding: 20px;
       background: #e7f0f7;
     }
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 9999;
+    }
     button {
       padding: 12px 16px;
       margin: 5px;
@@ -176,7 +190,7 @@
       <button onclick="document.getElementById('textModal').style.display='none'">❌ Close</button>
     </div>
   </div>
-
+<div id="toast"></div>
 <script>
 let profiles = JSON.parse(localStorage.getItem("profiles") || "[]");
 let images = JSON.parse(localStorage.getItem("images") || "[]");
@@ -275,15 +289,23 @@ function generateContent() {
   const loc = profiles[key].location;
   document.getElementById("textBox").value = pick.replaceAll("(loc)", loc);
 }
+function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.style.opacity = 1;
 
+    setTimeout(() => {
+      toast.style.opacity = 0;
+    }, 1000); // 1 second
+  }
 function copyText() {
   const txt = document.getElementById("textBox").value;
-  navigator.clipboard.writeText(txt).then(() => alert("Copied!"));
+  navigator.clipboard.writeText(txt).then(() => showToast("Copied!"));
 }
 
 function copyCaption() {
   if (!lastCaption) return alert("No caption generated yet!");
-  navigator.clipboard.writeText(lastCaption).then(() => alert("Caption copied!"));
+  navigator.clipboard.writeText(lastCaption).then(() => showToast("Caption copied!"));
 }
 
 function saveProfiles() {
