@@ -150,14 +150,9 @@
   <button onclick="openThreads()">🧵Thrds</button>
   <button onclick="copyRandomComment()">💬Cmnt</button>
 
-  <div class="image-container">
-    <img id="img1" src="">
-    <img id="img2" src="">
-  </div>
-
+  <button onclick="searchLocation()">🔍Location</button>
   <button onclick="openProfileModal()">➕Add Profiles</button>
   <button onclick="document.getElementById('textModal').style.display='block'">📝Add Post</button>
-  <input type="file" accept="image/*" multiple onchange="uploadImages(event)">
 
   <!-- Add Profiles Modal -->
   <div class="modal" id="profileModal">
@@ -550,7 +545,13 @@ function copyRandomComment() {
   });
 }
 
-
+function searchLocation() {
+  const loc = profiles[currentIndex]?.location;
+  if (!loc) return alert("No location set for this profile.");
+  const encoded = encodeURIComponent(loc);
+  window.open(`https://www.threads.net/search?q=${encoded}`, "_blank");
+}
+  
 renderTextTable();
 updateProfile();
 </script>
