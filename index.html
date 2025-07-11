@@ -153,7 +153,7 @@
   <button onclick="searchLocation()">🔍Location</button>
   <button onclick="openProfileModal()">➕Add Profiles</button>
   <button onclick="document.getElementById('textModal').style.display='block'">📝Add Post</button>
-  <button onclick="openThreadsWithText()">🧵 Hello Worlds</button>
+
 
   <!-- Add Profiles Modal -->
   <div class="modal" id="profileModal">
@@ -531,14 +531,7 @@ function searchLocation() {
   window.open(`https://www.threads.net/search?q=${encoded}`, "_blank");
 }
 
-function openThreadsWithText() {
-  const message = "hello worlds";
-  navigator.clipboard.writeText(message).then(() => {
-    showToast("Copied! Paste in Threads.");
-    // Try to open Threads composer (not guaranteed)
-    window.open("https://www.threads.net/", "_blank");
-  });
-}
+
   
 renderTextTable();
 updateProfile();
