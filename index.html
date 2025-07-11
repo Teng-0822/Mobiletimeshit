@@ -253,20 +253,18 @@ function uploadImages(e) {
 
 function generateContent() {
   const key = currentIndex;
-  
-  // Pick image
-  const usedI = usedImages[key] || [];
-  let poolI = images.map((_, i) => i).filter(i => !usedI.includes(i));
-  if (!poolI.length) usedImages[key] = [], poolI = images.map((_, i) => i);
-  const idx = poolI[Math.floor(Math.random() * poolI.length)];
-  usedImages[key] = [...(usedImages[key] || []), idx];
-  localStorage.setItem("usedImages", JSON.stringify(usedImages));
-  [document.getElementById("img1").src, document.getElementById("img2").src] = images[idx];
+  const profile = profiles[key];
+  if (!profile) return alert("No profile selected!");
+
+  const loc = profile.location;
 
   // Pick caption
   const usedC = usedCaptions[key] || [];
   let poolC = captions.filter(c => !usedC.includes(c));
-  if (!poolC.length) usedCaptions[key] = [], poolC = captions;
+  if (!poolC.length) {
+    usedCaptions[key] = [];
+    poolC = captions;
+  }
   lastCaption = poolC[Math.floor(Math.random() * poolC.length)];
   const caption = lastCaption;
   usedCaptions[key] = [...(usedCaptions[key] || []), caption];
@@ -277,15 +275,22 @@ function generateContent() {
   const textList = texts[day] || [];
   const usedT = usedTexts[key]?.[day] || [];
   let poolT = textList.filter(t => !usedT.includes(t));
-  if (!poolT.length) usedT.length = 0, poolT = textList;
+  if (!poolT.length) {
+    if (!usedTexts[key]) usedTexts[key] = {};
+    usedTexts[key][day] = [];
+    poolT = textList;
+  }
+
   const pick = poolT[Math.floor(Math.random() * poolT.length)];
+
   if (!usedTexts[key]) usedTexts[key] = {};
   if (!usedTexts[key][day]) usedTexts[key][day] = [];
   usedTexts[key][day].push(pick);
   localStorage.setItem("usedTexts", JSON.stringify(usedTexts));
-  const loc = profiles[key].location;
+
   document.getElementById("textBox").value = pick.replaceAll("(loc)", loc);
 }
+
 function showToast(msg) {
     const toast = document.getElementById("toast");
     toast.textContent = msg;
