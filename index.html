@@ -251,7 +251,7 @@ function generateSalary() {
     const nextMonthIndex = (Object.keys(monthDays).indexOf(month) + 1) % 12;
     const nextMonth = Object.keys(monthDays)[nextMonthIndex];
     const overflow = endDay - monthDays[month];
-    endDisplay = `${month} ${monthDays[month]} → ${nextMonth} ${overflow}`;
+    endDisplay = `${month} → ${nextMonth} ${overflow}`;
   }
 
   const result = `VINCENT'S SALARY\n\n` +
