@@ -188,11 +188,12 @@
       const table = document.getElementById('timeTable');
       const row = table.insertRow();
       row.innerHTML = `
-        <td><input type="number" class="hrInput" placeholder="Hours" value="${hours}"></td>
-        <td><input type="number" class="minInput" placeholder="Minutes" value="${minutes}"></td>
+        <td><input type="number" min="0" class="hrInput" placeholder="Hours" value="${hours}"></td>
+        <td><input type="number" min="0" class="minInput" placeholder="Minutes" value="${minutes}"></td>
         <td><button class="deleteBtn" onclick="deleteRow(this)">🗑️</button></td>
       `;
     }
+
 
 
     function deleteRow(btn) {
