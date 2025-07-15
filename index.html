@@ -223,14 +223,39 @@ function generateSalary() {
   const month = document.getElementById("salaryMonth").value;
   const start = parseInt(document.getElementById("salaryStartDate").value);
   const days = parseInt(document.getElementById("salaryDays").value);
-  const end = start + 7;
 
-  // Round total hours to nearest whole number
+  const monthDays = {
+    January: 31,
+    February: 29, // Let’s assume leap year safety
+    March: 31,
+    April: 30,
+    May: 31,
+    June: 30,
+    July: 31,
+    August: 31,
+    September: 30,
+    October: 31,
+    November: 30,
+    December: 31
+  };
+
   const totalHours = Math.round(calculateTotalHours());
   const totalPay = totalHours * 2;
 
+  const endDay = start + days - 1;
+  let endDisplay = "";
+
+  if (endDay <= monthDays[month]) {
+    endDisplay = `${month} ${endDay}`;
+  } else {
+    const nextMonthIndex = (Object.keys(monthDays).indexOf(month) + 1) % 12;
+    const nextMonth = Object.keys(monthDays)[nextMonthIndex];
+    const overflow = endDay - monthDays[month];
+    endDisplay = `${month} ${monthDays[month]} → ${nextMonth} ${overflow}`;
+  }
+
   const result = `VINCENT'S SALARY\n\n` +
-                 `Covered Date: ${month} ${start} - ${end}\n` +
+                 `Covered Date: ${month} ${start} - ${endDisplay}\n` +
                  `Total Days: ${days}\n` +
                  `Total Hours: ${totalHours}\n\n` +
                  `$ +${totalPay}`;
@@ -238,6 +263,7 @@ function generateSalary() {
   document.getElementById("salaryResult").textContent = result;
   closeSalaryModal();
 }
+
 
 // Replace with your actual logic
 function calculateTotalHours() {
