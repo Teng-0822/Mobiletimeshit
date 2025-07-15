@@ -183,23 +183,23 @@
       // Add to table
       addRow(Math.floor(total / 60), total % 60);
     }
+    
+     function addRow(hours = "", minutes = "") {
+      const table = document.getElementById('timeTable');
+      const row = table.insertRow();
+      row.innerHTML = `
+        <td><input type="number" class="hrInput" placeholder="Hours" value="${hours}"></td>
+        <td><input type="number" class="minInput" placeholder="Minutes" value="${minutes}"></td>
+        <td><button class="deleteBtn" onclick="deleteRow(this)">🗑️</button></td>
+      `;
+    }
 
-    function addRow() {
-        const table = document.getElementById("timeRows");
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td><input type="number" class="hour-input" value="0"></td>
-          <td><input type="number" class="minute-input" value="0"></td>
-          <td><button onclick="deleteRow(this)">❌</button></td>
-        `;
-        table.appendChild(row);
-      }
 
     function deleteRow(btn) {
       const row = btn.parentNode.parentNode;
       row.remove();
     }
-
+    
     function sumTable() {
       const hrs = document.querySelectorAll('.hrInput');
       const mins = document.querySelectorAll('.minInput');
@@ -209,6 +209,7 @@
       }
       document.getElementById('sumResult').innerText = `Total: ${formatMinutes(total)}`;
     }
+    
     function openSalaryModal() {
   document.getElementById("salaryModal").style.display = "flex";
 }
@@ -240,17 +241,14 @@ function generateSalary() {
 // Replace with your actual logic
 function calculateTotalHours() {
   let totalMinutes = 0;
-  const rows = document.querySelectorAll("#timeRows tr");
+  const hourInputs = document.querySelectorAll(".hrInput");
+  const minuteInputs = document.querySelectorAll(".minInput");
 
-  rows.forEach(row => {
-    const hourInput = row.querySelector(".hour-input");
-    const minuteInput = row.querySelector(".minute-input");
-
-    const hours = parseInt(hourInput?.value) || 0;
-    const minutes = parseInt(minuteInput?.value) || 0;
-
+  for (let i = 0; i < hourInputs.length; i++) {
+    const hours = parseInt(hourInputs[i].value) || 0;
+    const minutes = parseInt(minuteInputs[i].value) || 0;
     totalMinutes += (hours * 60) + minutes;
-  });
+  }
 
   return totalMinutes / 60;
 }
